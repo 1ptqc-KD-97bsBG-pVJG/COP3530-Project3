@@ -1,6 +1,10 @@
 <H1> COP3530 - Project 3 </h1>
 This is the template for Project 3 repositories. It includes all the assignment instructions and documentation to help you use GitHub.
 
+CURRENT VERSIONS:
+- Rails: 7.0.8
+- Ruby: ruby 3.0.4p208 (2022-04-12 revision 3fa771dded) [arm64-darwin20]
+
 <h2> Table of Contents </h2>
 
 - [Documentation and resources on how to use GitHub for Project 3](#documentation-and-resources-on-how-to-use-github-for-project-3)
