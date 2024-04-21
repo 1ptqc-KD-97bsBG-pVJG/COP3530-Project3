@@ -10,9 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_04_21_041839) do
+ActiveRecord::Schema[7.0].define(version: 2024_04_21_050225) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "postgis"
+
+  create_table "temperature_records", force: :cascade do |t|
+    t.geography "location", limit: {:srid=>4326, :type=>"st_point", :geographic=>true}
+    t.datetime "recorded_at"
+    t.float "outside_temp"
+    t.float "speed"
+    t.float "elevation"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["location"], name: "index_temperature_records_on_location", using: :gist
+  end
 
 end

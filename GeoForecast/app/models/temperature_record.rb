@@ -1,0 +1,2 @@
+class TemperatureRecord < ApplicationRecord
+end
