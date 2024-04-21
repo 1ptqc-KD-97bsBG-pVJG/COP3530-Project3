@@ -1,0 +1,28 @@
+<div class="container mt-5">
+  <h1 class="text-center mb-4">GeoForecast</h1>
+
+  <%= form_with(url: search_path, method: :get, local: true, class: "row g-3") do |form| %>
+    <div class="col-md-4">
+      <%= form.label :latitude, 'Latitude:', class: "form-label" %>
+      <%= form.number_field :latitude, step: :any, required: true, placeholder: "Enter latitude", class: "form-control" %>
+    </div>
+
+    <div class="col-md-4">
+      <%= form.label :longitude, 'Longitude:', class: "form-label" %>
+      <%= form.number_field :longitude, step: :any, required: true, placeholder: "Enter longitude", class: "form-control" %>
+    </div>
+
+    <div class="col-md-4">
+      <%= form.label :initial_search_radius, 'Initial Search Radius (meters):', class: "form-label" %>
+      <%= form.number_field :initial_search_radius, required: true, placeholder: "Enter initial search radius", class: "form-control" %>
+    </div>
+
+    <div class="text-center">
+      <%= form.submit 'Get Forecast', class: "btn btn-primary mt-3" %>
+    </div>
+  <% end %>
+
+  <div class="text-center mt-5">
+    <img src="https://i.etsystatic.com/7226812/r/il/a9f0f7/699603092/il_1080xN.699603092_e48i.jpg" alt="Map of the USA" class="img-fluid">
+  </div>
+</div>
