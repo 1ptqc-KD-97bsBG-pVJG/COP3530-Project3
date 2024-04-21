@@ -1,3 +1,7 @@
+# PLACE CSV TO BE IMPORTED RIGHT OUTSIDE OF THE 'GeoForecast' FOLDER
+# Run command: bundle exec rake db:import_temperature_records to import the CSV file
+# (it will take a while to run)
+
 require 'csv'
 namespace :db do
   desc "Import temperature records from a prepped CSV file"
