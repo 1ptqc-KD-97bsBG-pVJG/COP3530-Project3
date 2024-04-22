@@ -29,47 +29,6 @@
     <p>No records found. Please adjust your search criteria and try again.</p>
   <% end %>
 
-  <div id="map" style="height: 500px;"></div>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      <% if @records.present? %>
-      var records = <%= @records.first(1000).map { |r| { lat: r.location.latitude, lng: r.location.longitude, temp: r.outside_temp, recorded_at: r.recorded_at.strftime('%Y-%m-%d %H:%M:%S') } }.to_json.html_safe %>;
-
-      var map = L.map('map');
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-      }).addTo(map);
-
-      var bounds = new L.LatLngBounds();
-
-      // Create a special marker for the global point with a different icon
-      var globalPoint = L.marker([<%= @latitude_global %>, <%= @longitude_global %>], {
-        icon: L.icon({
-          iconUrl: 'https://static.vecteezy.com/system/resources/previews/010/898/284/original/red-pin-3d-png.png',
-          iconSize: [30, 30], // can adjust size as needed
-          iconAnchor: [15, 50], // ensures the icon is centered
-          popupAnchor: [0, -50] // ensures the popup opens above the icon
-        })
-      }).addTo(map).bindPopup("User's Point");
-
-      bounds.extend([<%= @latitude_global %>, <%= @longitude_global %>]);
-
-      // Add markers for temperature records
-      records.forEach(function(record) {
-        var marker = L.marker([record.lat, record.lng]).addTo(map)
-          .bindPopup("<b>Temperature:</b> " + record.temp + "°C<br/><b>Recorded At:</b> " + record.recorded_at);
-        bounds.extend(marker.getLatLng());
-      });
-
-      map.fitBounds(bounds, { padding: [50, 50] }); // Adjusts view to include all markers with padding
-      <% else %>
-      map.setView([37.8, -96], 4); // Default view if no records are present
-      <% end %>
-    });
-  </script>
-
   <% if @filtered_records.present? %>
     <p>Displaying first <%= [100, @filtered_records.count].min %> FILTERED records out of <%= @filtered_records.count %> found.</p>
     <p>Datetime is <%= @datetime %> </p>
@@ -99,7 +58,76 @@
     <p>No records found. Please adjust your search criteria and try again.</p>
   <% end %>
 
+
+  <div class="row">
+    <div class="col">
+      <h2>Records Map</h2>
+      <div id="records-map" style="height: 500px;"></div>
+    </div>
+    <div class="col">
+      <h2>Filtered Records Map</h2>
+      <div id="filtered-records-map" style="height: 500px;"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      <% if @records.present? %>
+      // Initialize the first map with @records
+      initializeMap('records-map', <%= @records.first(1000).map { |r| [r.location.latitude, r.location.longitude] }.to_json.html_safe %>, <%= [@latitude_global, @longitude_global].to_json.html_safe %>);
+
+      <% end %>
+      
+      <% if @filtered_records.present? %>
+      // Initialize the second map with @filtered_records
+      initializeMap('filtered-records-map', <%= @filtered_records.map { |r| [r.location.latitude, r.location.longitude] }.to_json.html_safe %>, <%= [@latitude_global, @longitude_global].to_json.html_safe %>);
+
+      <% end %>
+    });
+
+    function initializeMap(mapId, records, globalPoint) {
+      var map = L.map(mapId).setView([37.8, -96], 4);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      var bounds = new L.LatLngBounds();
+      
+      // Create a special marker for the global point with a different icon
+      var globalPoint = L.marker([<%= @latitude_global %>, <%= @longitude_global %>], {
+        icon: L.icon({
+          iconUrl: 'https://static.vecteezy.com/system/resources/previews/010/898/284/original/red-pin-3d-png.png',
+          iconSize: [30, 30], // can adjust size as needed
+          iconAnchor: [15, 50], // ensures the icon is centered
+          popupAnchor: [0, -50] // ensures the popup opens above the icon
+        })
+      }).addTo(map).bindPopup("User's Point");
+
+      bounds.extend([<%= @latitude_global %>, <%= @longitude_global %>]);
+
+
+      records.forEach(function(coords) {
+        var marker = L.marker(coords).addTo(map);
+        bounds.extend(marker.getLatLng());
+      });
+
+      if (records.length > 0) {
+        map.fitBounds(bounds); // Fits the map view to the bounds of the markers
+      }
+    }
+  </script>
+
+
+
+
+
   <div class="text-center mt-4">
     <%= link_to 'New Search', root_path, class: "btn btn-secondary" %>
   </div>
+
+
+
+
 </div>
+
