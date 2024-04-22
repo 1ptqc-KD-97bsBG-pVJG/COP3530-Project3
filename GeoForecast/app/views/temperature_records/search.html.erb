@@ -27,6 +27,29 @@
     <p>No records found. Please adjust your search criteria and try again.</p>
   <% end %>
 
+  <div id="map" style="height: 400px;"></div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        <% if @records.present? %>
+        var records = <%= @records.first(100).map { |r| { lat: r.location.latitude, lng: r.location.longitude, temp: r.outside_temp, recorded_at: r.recorded_at.strftime('%Y-%m-%d %H:%M:%S') } }.to_json.html_safe %>;
+
+        if (records.length > 0) {
+          var map = L.map('map').setView([records[0].lat, records[0].lng], 10); // Center on the first record, adjust zoom level as needed
+
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+          }).addTo(map);
+
+          records.forEach(function(record) {
+            L.marker([record.lat, record.lng]).addTo(map)
+              .bindPopup("<b>Temperature:</b> " + record.temp + "°C<br/><b>Recorded At:</b> " + record.recorded_at);
+          });
+        }
+      });
+    </script>
+    <% end %>
+
   <div class="text-center mt-4">
     <%= link_to 'New Search', root_path, class: "btn btn-secondary" %>
   </div>
