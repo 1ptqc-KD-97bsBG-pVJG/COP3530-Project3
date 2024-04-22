@@ -2,24 +2,29 @@
   <h1 class="text-center mb-4">GeoForecast</h1>
 
   <%= form_with(url: search_path, method: :get, local: true, class: "row g-3") do |form| %>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <%= form.label :latitude, 'Latitude:', class: "form-label" %>
       <%= form.number_field :latitude, step: :any, required: true, placeholder: "Enter latitude", class: "form-control" %>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
       <%= form.label :longitude, 'Longitude:', class: "form-label" %>
       <%= form.number_field :longitude, step: :any, required: true, placeholder: "Enter longitude", class: "form-control" %>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
       <%= form.label :initial_search_radius, 'Initial Search Radius (meters):', class: "form-label" %>
       <%= form.number_field :initial_search_radius, placeholder: "Enter initial search radius", class: "form-control" %>
     </div>
 
-    <div class="col-md-6">
-      <%= form.label :datetime, 'Date and Time:', class: "form-label" %>
-      <%= form.text_field :datetime, class: "form-control", value: DateTime.current.strftime("%Y-%m-%d %H:%M"), id: "datetimepicker" %>
+    <div class="col-md-3">
+      <%= form.label :date, 'Date:', class: "form-label" %>
+      <%= form.date_field :date, value: Time.now.strftime("%Y-%m-%d"), class: "form-control" %>
+    </div>
+
+    <div class="col-md-3">
+      <%= form.label :time, 'Time:', class: "form-label" %>
+      <%= form.time_field :time, value: Time.now.strftime("%H:%M"), class: "form-control"%>
     </div>
 
     <div class="text-center">
@@ -32,15 +37,7 @@
   </div>
 </div>
 
-
-  <script>
-    document.addEventListener("turbolinks:load", function() {
-      flatpickr("#datetimepicker", {
-        enableTime: true,
-        dateFormat: "Y-m-d H:i",
-      });
-    });
-
+<script>
     // Javascript for map
     document.addEventListener('DOMContentLoaded', function() {
       var map = L.map('map').setView([37.8, -96], 4);  // Center on the US at a zoom level showing most of the country
