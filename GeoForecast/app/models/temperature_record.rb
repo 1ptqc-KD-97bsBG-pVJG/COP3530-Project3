@@ -1,12 +1,12 @@
 class TemperatureRecord < ApplicationRecord
   # TODO: switch to this implementation
-  # def self.find_and_process_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, datetime, sort_algo)
-  #   records = find_nearby_records(latitude, longitude, initial_radius, increment_step, max_radius)
-  #   sorted_records = process_sorting(records, datetime, sort_algo)
-  #   filtered_records = filter_records(sorted_records, datetime)
+  def self.find_and_process_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, datetime, sort_algo)
+     records = find_nearby_records(latitude, longitude, initial_radius, increment_step, max_radius)
+     sorted_records = process_sorting(records, datetime, sort_algo)
+     filtered_records = filter_records(sorted_records, datetime)
 
-  #   filtered_records
-  # end
+  filtered_records
+  end
 
 
 
@@ -15,7 +15,7 @@ class TemperatureRecord < ApplicationRecord
   # If records are found after expanding the radius, it will further expand the radius by 2000 meters to capture nearby records
   
   # max_radius set to furthest point on continental US from data
-  def self.find_nearby_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, datetime = DateTime.now, sort_algo = 1)
+  def self.find_nearby_records(latitude, longitude, initial_radius, increment_step, max_radius, datetime = DateTime.now, sort_algo = 1)
       location_point = RGeo::Geographic.spherical_factory(srid: 4326).point(longitude, latitude)
       radius = initial_radius
       records = where("ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?)", longitude, latitude, radius)
@@ -244,6 +244,6 @@ class TemperatureRecord < ApplicationRecord
     puts "TIME FILTER - RETURNING #{filtered_records.count} FILTERED RECORDS"
     filtered_records
   end
-  
+
 
 end

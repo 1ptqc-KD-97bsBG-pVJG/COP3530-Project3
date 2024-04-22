@@ -21,7 +21,7 @@ class TemperatureRecordsController < ApplicationController
     # Render a view to display the search results (you'll need to create this view)
     # If you're going to use the same view ('home/index'), you can redirect or simply render 'home/index'
     puts "Attempting to filter records..."
-    @filtered_records = TemperatureRecord.filter_records(@records, datetime)
+    @filtered_records = TemperatureRecord.find_and_process_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, datetime, sort_algo)
   end
 
   def parse_datetime_from_params
