@@ -1,2 +1,66 @@
-/log/*.log
-/tmp/
+# Ignore bundler config
+/.bundle
+
+# Ignore all logfiles and tempfiles
+/log/*
+!/log/.keep
+/tmp
+
+# Ignore pid files, but keep the directory
+/tmp/pids/
+!/tmp/pids/
+!/tmp/pids/.keep
+
+# PostgreSQL specific ignore (if using structure.sql and frequent irrelevant changes)
+# /db/structure.sql
+
+# Ignore system and project local environment variable configurations
+.env
+.env.local
+.env.*.local
+
+# Ignore Mac and Linux file system artifacts
+.DS_Store
+*.swp
+*.swo
+
+# Ignore IDE and editor files
+.idea/
+.vscode/
+*.sublime-*
+*~
+
+# Ignore node_modules
+/node_modules
+
+# Ignore precompiled assets
+/public/assets
+/public/packs
+/public/packs-test
+
+# Ignore yarn files
+.yarn
+.yarnrc
+.yarn-error.log
+.yarn-integrity
+
+# Ignore uploaded files in development
+/storage/*
+!/storage/.keep
+
+# Ignore public/system and carrierwave upload directories
+/public/system
+/public/uploads
+
+# Ignore webpacker binstubs
+/bin/webpack*
+/bin/yarn
+
+# Ignore ActionCable configuration files
+/cable.yml
+
+# Ignore sprockets better errors helper
+/sprockets_better_errors*
+
+# Ignore byebug history
+.byebug_history
