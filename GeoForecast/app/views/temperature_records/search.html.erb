@@ -13,7 +13,7 @@
         </tr>
       </thead>
       <tbody>
-        <% @records.first(100).each do |record| %>
+        <% @records.first(10).each do |record| %>
           <tr>
             <td><%= record.location.latitude %></td>
             <td><%= record.location.longitude %></td>
@@ -31,20 +31,27 @@
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         <% if @records.present? %>
-        var records = <%= @records.first(100).map { |r| { lat: r.location.latitude, lng: r.location.longitude, temp: r.outside_temp, recorded_at: r.recorded_at.strftime('%Y-%m-%d %H:%M:%S') } }.to_json.html_safe %>;
+        var records = <%= @records.first(1000).map { |r| { lat: r.location.latitude, lng: r.location.longitude, temp: r.outside_temp, recorded_at: r.recorded_at.strftime('%Y-%m-%d %H:%M:%S') } }.to_json.html_safe %>;
 
         if (records.length > 0) {
-          var map = L.map('map').setView([records[0].lat, records[0].lng], 10); // Center on the first record, adjust zoom level as needed
+          var map = L.map('map');
 
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap'
           }).addTo(map);
 
+          var bounds = new L.LatLngBounds();
+
           records.forEach(function(record) {
-            L.marker([record.lat, record.lng]).addTo(map)
+            var marker = L.marker([record.lat, record.lng]).addTo(map)
               .bindPopup("<b>Temperature:</b> " + record.temp + "°C<br/><b>Recorded At:</b> " + record.recorded_at);
+            bounds.extend(marker.getLatLng());
           });
+
+          map.fitBounds(bounds, { padding: [50, 50] }); // Adjusts view to include all markers with padding
+        } else {
+          map.setView([37.8, -96], 4); // Default view if no records are present
         }
       });
     </script>
