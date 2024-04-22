@@ -1,8 +1,8 @@
 class TemperatureRecord < ApplicationRecord
   # TODO: switch to this implementation
-  def self.find_and_process_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, datetime, sort_algo)
+  def self.find_and_process_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, datetime, sort_merge = false, sort_heap = true)
      records = find_nearby_records(latitude, longitude, initial_radius, increment_step, max_radius)
-     sorted_records = process_sorting(records, datetime, sort_algo)
+     sorted_records = process_sorting(records, sort_merge, sort_heap)
      filtered_records = filter_records(sorted_records, datetime)
 
   filtered_records
@@ -15,7 +15,7 @@ class TemperatureRecord < ApplicationRecord
   # If records are found after expanding the radius, it will further expand the radius by 2000 meters to capture nearby records
   
   # max_radius set to furthest point on continental US from data
-  def self.find_nearby_records(latitude, longitude, initial_radius, increment_step, max_radius, datetime = DateTime.now, sort_algo = 1)
+  def self.find_nearby_records(latitude, longitude, initial_radius, increment_step, max_radius, datetime = DateTime.now)
       location_point = RGeo::Geographic.spherical_factory(srid: 4326).point(longitude, latitude)
       radius = initial_radius
       records = where("ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?)", longitude, latitude, radius)
@@ -43,25 +43,35 @@ class TemperatureRecord < ApplicationRecord
       end
 
 
-    # TODO: call sorting function(s) here, provide records as input
-
-      # use user-pvoided flag to determine which sorting algorithm to use
-      # if sort_algo = 0
-      # sorted_records = merge_sort(records)
-      # elif sort_algo = 1
-        # sorted_records = sort_heap(records, datetime)
-      # else
-        # sorted_records = run both
-
-    # filtered_records = self.filter_records(sorted_records, datetime)
-
-    # records.to_a
-    heap_sort(records.to_a)
-    # filtered_records
+    records
    end
 #
 #   # NOTE: records may already be sorted by date, verify this and randomize prior to sorting if necessary
 #
+  def self.process_sorting(records, sort_merge, sort_heap)
+    sorted_records = records
+    if sort_merge
+      # BENCHMARK HERE
+      begin
+        sorted_records =  merge_sort(records)
+      rescue => e
+        puts "Error sorting records with merge sort: #{e.message}"
+      end
+    end
+
+    if sort_heap
+      # BENCHMARK HERE
+      begin
+        sorted_records =  heap_sort(records)
+      rescue => e
+        puts "Error sorting records with heap sort: #{e.message}"
+      end
+    end
+
+    sorted_records
+  end
+
+
 #   # TODO: implement sorting algorithm 1
 
     def self.merge_sort(records)

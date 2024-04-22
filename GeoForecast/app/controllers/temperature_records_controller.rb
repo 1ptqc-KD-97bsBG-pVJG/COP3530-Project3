@@ -6,6 +6,8 @@ class TemperatureRecordsController < ApplicationController
     initial_radius = params[:initial_search_radius].to_i
     # combine date and time into one datetime object
     datetime = parse_datetime_from_params
+    sort_merge = params[:sort_merge] == "1"
+    sort_heap = params[:sort_heap] == "1"
 
 
     # Define these as per your requirements or make them configurable
@@ -13,15 +15,17 @@ class TemperatureRecordsController < ApplicationController
     # max_radius = 20000 # Example: Maximum search radius
 
     # Use the model's method to perform the search
+    # ========
+    # DEBUGGING
     @records = TemperatureRecord.find_nearby_records(latitude, longitude, initial_radius)
     @datetime = datetime
 
     @latitude_global = latitude
     @longitude_global = longitude
-    # Render a view to display the search results (you'll need to create this view)
-    # If you're going to use the same view ('home/index'), you can redirect or simply render 'home/index'
-    puts "Attempting to filter records..."
-    @filtered_records = TemperatureRecord.find_and_process_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, datetime, sort_algo)
+    # ========
+    
+    puts "Attempting to process records..."
+    @filtered_records = TemperatureRecord.find_and_process_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, datetime, sort_merge, sort_heap)
   end
 
   def parse_datetime_from_params

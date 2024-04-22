@@ -27,6 +27,15 @@
       <%= form.time_field :time, value: Time.now.strftime("%H:%M"), class: "form-control"%>
     </div>
 
+    <div class="col-md-3">
+      <label class="form-label">Sort Method:</label><br>
+      <%= form.check_box :sort_heap, id: 'sort_heap' %>
+      <%= form.label :sort_heap, 'Heap Sort', class: "form-check-label" %><br>
+      <%= form.check_box :sort_merge, id: 'sort_merge' %>
+      <%= form.label :sort_merge, 'Merge Sort', class: "form-check-label" %>
+    </div>
+
+
     <div class="text-center">
       <%= form.submit 'Get Forecast', class: "btn btn-primary mt-3" %>
     </div>
@@ -40,6 +49,19 @@
 <script>
     // Javascript for map
     document.addEventListener('DOMContentLoaded', function() {
+      // Ensure at least one sort method is selected
+      const sortHeap = document.getElementById('sort_heap');
+      const sortMerge = document.getElementById('sort_merge');
+
+      function validateSortSelection() {
+        if (!sortHeap.checked && !sortMerge.checked) {
+          sortHeap.checked = true; // Default to Heap sort if none is selected
+        }
+      }
+
+    document.querySelector('form').addEventListener('submit', validateSortSelection);
+
+
       var map = L.map('map').setView([37.8, -96], 4);  // Center on the US at a zoom level showing most of the country
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
