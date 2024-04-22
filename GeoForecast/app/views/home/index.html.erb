@@ -23,6 +23,53 @@
   <% end %>
 
   <div class="text-center mt-5">
-    <img src="https://i.etsystatic.com/7226812/r/il/a9f0f7/699603092/il_1080xN.699603092_e48i.jpg" alt="Map of the USA" class="img-fluid">
+    <div id="map" style="height: 500px;"></div>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var map = L.map('map').setView([37.8, -96], 4);  // Center on the US at a zoom level showing most of the country
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      var marker;  // Define a variable for the marker
+
+      function addOrUpdateMarker(lat, lng) {
+        if (marker) {
+          marker.setLatLng([lat, lng]); // If marker exists, update its position
+        } else {
+          marker = L.marker([lat, lng]).addTo(map); // Otherwise, create a new marker
+        }
+      }
+
+      function onMapClick(e) {
+        var latitude = e.latlng.lat;
+        var longitude = e.latlng.lng;
+        document.querySelector('[name="latitude"]').value = latitude.toFixed(5);
+        document.querySelector('[name="longitude"]').value = longitude.toFixed(5);
+        addOrUpdateMarker(latitude, longitude);
+      }
+
+      map.on('click', onMapClick);
+
+      // Listen for changes in the latitude and longitude input fields
+      document.querySelector('[name="latitude"]').addEventListener('change', function() {
+        updateMarkerFromInputs();
+      });
+      document.querySelector('[name="longitude"]').addEventListener('change', function() {
+        updateMarkerFromInputs();
+      });
+
+      function updateMarkerFromInputs() {
+        var lat = parseFloat(document.querySelector('[name="latitude"]').value);
+        var lng = parseFloat(document.querySelector('[name="longitude"]').value);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          map.panTo([lat, lng]);
+          addOrUpdateMarker(lat, lng);
+        }
+      }
+    });
+  </script>
 </div>
