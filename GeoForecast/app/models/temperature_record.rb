@@ -55,8 +55,8 @@ class TemperatureRecord < ApplicationRecord
 
     # filtered_records = self.filter_records(sorted_records, datetime)
 
-    records.to_a
-    # merge_sort(records.to_a)
+    # records.to_a
+    heap_sort(records.to_a)
     # filtered_records
    end
 #
@@ -65,32 +65,65 @@ class TemperatureRecord < ApplicationRecord
 #   # TODO: implement sorting algorithm 1
 
     def self.merge_sort(records)
-      puts "Sorting #{records.length} records..."  # Debug output
-      return records if records.length <= 1
+        return records if records.length <= 1
 
-      mid = records.length / 2
-      left_sorted = merge_sort(records[0...mid])
-      right_sorted = merge_sort(records[mid..])
+        mid = records.length / 2
+        left_sorted = merge_sort(records[0...mid])
+        right_sorted = merge_sort(records[mid..])
 
-      merge(left_sorted, right_sorted)
-    end
-
-
-    def merge(left, right)
-      sorted = []
-      while !left.empty? && !right.empty?
-        # Compare the datetime attributes of the left and right elements
-        if left.first.datetime <= right.first.datetime
-          sorted << left.shift
-        else
-          sorted << right.shift
-        end
+        merge(left_sorted, right_sorted)
       end
 
-      # Concatenate what's left in either left or right arrays to the sorted array
-      sorted.concat(left).concat(right)
-      sorted
-    end
+      private
+
+      def self.merge(left, right)
+        sorted = []
+        while left.any? && right.any?
+          if left.first.recorded_at <= right.first.recorded_at
+            sorted << left.shift
+          else
+            sorted << right.shift
+          end
+        end
+        sorted + left + right
+      end
+
+
+    def self.heap_sort(records, attr_sym = :recorded_at)
+        n = records.length
+        # Build max heap
+        (n / 2 - 1).downto(0) do |i|
+          heapify(records, n, i, attr_sym)
+        end
+
+        # One by one extract elements
+        (n - 1).downto(1) do |i|
+          records[i], records[0] = records[0], records[i]  # swap
+          heapify(records, i, 0, attr_sym)  # call max heapify on the reduced heap
+        end
+        records
+      end
+
+      private
+
+      # Helper method to maintain the heap property
+      def self.heapify(records, n, i, attr_sym)
+        largest = i  # Initialize largest as root
+        left = 2 * i + 1  # left = 2*i + 1
+        right = 2 * i + 2  # right = 2*i + 2
+
+        # If left child is larger than root
+        largest = left if left < n && records[left].send(attr_sym) > records[largest].send(attr_sym)
+
+        # If right child is larger than largest so far
+        largest = right if right < n && records[right].send(attr_sym) > records[largest].send(attr_sym)
+
+        # If largest is not root
+        if largest != i
+          records[i], records[largest] = records[largest], records[i]  # swap
+          heapify(records, n, largest, attr_sym)  # Recursively heapify the affected sub-tree
+        end
+      end
 #
 #   # TODO: imeplement sorting algorithm 2
 #   def self.sort_heap(records) {
