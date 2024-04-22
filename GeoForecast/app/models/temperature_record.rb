@@ -129,25 +129,38 @@ class TemperatureRecord < ApplicationRecord
 
   #TODO: filter sorted records:
   def self.filter_records(records, target_datetime)
+    puts "Filtering #{records.count} records..."
+    puts "Target datetime: " + target_datetime.to_s
+
     # first find all records within one month
     filtered_records = filter_by_date(records, target_datetime, 15)
+
+    puts "Found #{filtered_records.count} records within 15 days of target date."
   
     # find all records within 2 hours of time and 1 month of date
     filtered_records = filter_by_time(filtered_records, target_datetime, 2.hours)
 
     # if no records are within 1 month, ignore date and just filter by time
     if filtered_records.empty?
+      puts "NO RECORDS FOUND WITHIN 1 MONTH AND 2 HOURS OF TARGET DATETIME"
       # if no records are within 2 hours, increment by 1 hours until increment is 6 hours
+      puts "Looking for records within 6 hours of target time..."
       filtered_records = filter_by_time(records, target_datetime, 2.hours, true, 6.hours)
+
+      puts "Found #{filtered_records.count} records within 6 hours of target time."
       
       # if no records found within 6 hours, filter by date and increment by 10 days until records found
       if filtered_records.empty?
+        puts "NO RECORDS FOUND WITHIN 6 HOURS OF TARGET TIME"
+        puts "Iterating through date range..."
         increment = 20
         while increment <= 183 && filtered_records.empty?
+          puts "Looking for records within #{increment} days of target date..."
           filtered_records = filter_by_date(records, target_datetime, increment)
           # increase search range by 10 days each loop
           increment += 5
         end
+        puts "Found #{filtered_records.count} records within #{increment} days of target date."
 
         if filtered_records.empty?
           # if no records found, just return records (guarenteed to have some records)
@@ -156,10 +169,13 @@ class TemperatureRecord < ApplicationRecord
           filtered_records = records
         else
         # If records are found with the broader date range, attempt a final time filter
+          puts "Looking for records within 2 hours of target time..."
           filtered_records = filter_by_time(filtered_records, target_datetime, 2.hours, true, 24.hours)
+          puts "Found #{filtered_records.count} records within 2 hours of target time."
         end
       end
     end
+    puts "RETURNING #{filtered_records.count} FILTERED RECORDS"
     filtered_records
   end
 
@@ -189,25 +205,45 @@ class TemperatureRecord < ApplicationRecord
   end
 
 
+      
   def self.filter_by_time(records, target_datetime, range, increment = false, limit = 6.hours)
-    # ignore date and find all records within the range of the time
-    filtered_records = records.select { |record|
-      time_diff = (record.recorded_at - target_datetime).abs
+    # Extract only the time part of the target_datetime
+    target_time_of_day = target_datetime.seconds_since_midnight
+    puts "Target time for comparison (seconds since midnight): #{target_time_of_day}"
+  
+    # Initial filter based on the time range
+    filtered_records = records.select do |record|
+      record_time_of_day = record.recorded_at.seconds_since_midnight
+      time_diff = (record_time_of_day - target_time_of_day).abs
       time_diff <= range
-    }
-        
-    # loop for incrementing search range
+    end
+  
+    puts "Initially found #{filtered_records.count} records within the time range of #{range} seconds."
+  
+    # Loop for incrementing search range if no records are found and increment is true
     if filtered_records.empty? && increment
-      new_range = range + 1.hour
-      while new_range <= limit
+      puts "TIME LOOP INITIATED"
+      new_range = range
+      while new_range < limit
+        new_range += 1.hour
+        puts "Looking for records within #{new_range.seconds} of target time..."
+  
         filtered_records = records.select do |record|
-          time_diff = (record.recorded_at - target_datetime).abs
+          record_time_of_day = record.recorded_at.seconds_since_midnight
+          time_diff = (record_time_of_day - target_time_of_day).abs
           time_diff <= new_range
         end
-        break if filtered_records.any?
-        new_range += 1.hour
+  
+        if filtered_records.any?
+          puts "Found #{filtered_records.count} records within #{new_range} seconds of target time."
+          break
+        end
       end
     end
+  
+    puts "TIME FILTER - RETURNING #{filtered_records.count} FILTERED RECORDS"
     filtered_records
   end
+  
+
 end

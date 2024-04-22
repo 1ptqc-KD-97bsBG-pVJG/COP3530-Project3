@@ -3,6 +3,8 @@
 
   <% if @records.present? %>
     <p>Displaying first <%= [100, @records.count].min %> records out of <%= @records.count %> found.</p>
+    <p>Datetime is <%= @datetime %> </p>
+    <p>Time is <%= @datetime.to_time.hour %>:<%= @datetime.to_time.min %></p>
     <table class="table table-striped">
       <thead>
         <tr>
@@ -19,6 +21,35 @@
             <td><%= record.location.longitude %></td>
             <td><%= record.outside_temp %>°C</td>
             <td><%= record.recorded_at %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>No records found. Please adjust your search criteria and try again.</p>
+  <% end %>
+
+  <% if @filtered_records.present? %>
+    <p>Displaying first <%= [100, @filtered_records.count].min %> FILTERED records out of <%= @filtered_records.count %> found.</p>
+    <p>Datetime is <%= @datetime %> </p>
+    <p>Time is <%= @datetime.in_time_zone("Eastern Time (US & Canada)").strftime("%m/%d/%Y %I:%M %p")  %></p>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Latitude</th>
+          <th>Longitude</th>
+          <th>Temperature</th>
+          <th>Recorded At</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @records.first(100).each do |record| %>
+          <tr>
+            <td><%= record.location.latitude %></td>
+            <td><%= record.location.longitude %></td>
+            <td><%= record.outside_temp %>°C</td>
+            <%# convert to est and 12 hour format%>
+            <td><%= record.recorded_at.in_time_zone("Eastern Time (US & Canada)").strftime("%m/%d/%Y %I:%M %p") %></td>
           </tr>
         <% end %>
       </tbody>
