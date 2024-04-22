@@ -17,6 +17,11 @@
       <%= form.number_field :initial_search_radius, placeholder: "Enter initial search radius", class: "form-control" %>
     </div>
 
+    <div class="col-md-6">
+      <%= form.label :datetime, 'Date and Time:', class: "form-label" %>
+      <%= form.text_field :datetime, class: "form-control", value: DateTime.current.strftime("%Y-%m-%d %H:%M"), id: "datetimepicker" %>
+    </div>
+
     <div class="text-center">
       <%= form.submit 'Get Forecast', class: "btn btn-primary mt-3" %>
     </div>
@@ -25,7 +30,18 @@
   <div class="text-center mt-5">
     <div id="map" style="height: 500px;"></div>
   </div>
+</div>
+
+
   <script>
+    document.addEventListener("turbolinks:load", function() {
+      flatpickr("#datetimepicker", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+      });
+    });
+
+    // Javascript for map
     document.addEventListener('DOMContentLoaded', function() {
       var map = L.map('map').setView([37.8, -96], 4);  // Center on the US at a zoom level showing most of the country
 
