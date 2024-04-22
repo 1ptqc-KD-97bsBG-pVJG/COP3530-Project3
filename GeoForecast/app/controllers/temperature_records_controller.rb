@@ -12,6 +12,8 @@ class TemperatureRecordsController < ApplicationController
     # Use the model's method to perform the search
     @records = TemperatureRecord.find_nearby_records(latitude, longitude, initial_radius)
 
+    @latitude_global = latitude
+    @longitude_global = longitude
     # Render a view to display the search results (you'll need to create this view)
     # If you're going to use the same view ('home/index'), you can redirect or simply render 'home/index'
   end
