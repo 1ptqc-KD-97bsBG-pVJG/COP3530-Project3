@@ -1,71 +1,113 @@
 <div class="container mt-5">
-  <h1 class="text-center mb-4">Search Results</h1>
+   <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="text-center">
+        <h1 class="display-3" style="color: #2193b0;"><i class="fas fa-thermometer-half"></i> Temperature Prediction</h1>
+      </div>
+    </div>
+  </div>
 
   <% if @records.present? %>
-    <p>Displaying first <%= [100, @records.count].min %> records out of <%= @records.count %> found.</p>
-    <p>Datetime is <%= @datetime %> </p>
-    <p>Time is <%= @datetime.to_time.hour %>:<%= @datetime.to_time.min %></p>
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Latitude</th>
-          <th>Longitude</th>
-          <th>Temperature</th>
-          <th>Recorded At</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @records.first(100).each do |record| %>
+    
+    
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="text-center p-4" style="background: linear-gradient(to right, #6dd5ed, #2193b0); border-radius: 15px; color: white; margin-bottom: 0;">
+        <img src="https://cdn2.iconfinder.com/data/icons/weather-flat-14/64/weather02-512.png" alt="Weather Icon" style="width: 160px; height: auto;">
+
+        <h1 class="display-1"><strong><%= @average_temperature_f %>°F</strong></h1>
+        
+        <p class="lead">
+          <i>on <%= @datetime.strftime("%m/%d @ %I:%M %p") %></i>
+        </p>
+        <p class="lead">
+          <%= @confidence %>% confidence
+        </p>
+      </div>
+    </div>
+    <div class="row justify-content-center mt-4">
+      <div class="col-md-8">
+      <p class="text-center" style="font-size: 1rem; margin-top: -25px;">
+        <i><%= number_with_delimiter(@records.count, delimiter: ",") %> total nearby records, using <%= number_with_delimiter(@filtered_records.count, delimiter: ",") %> relevant records</i>
+      </p>
+
+      </div>
+    </div>  
+  </div>
+</div>
+
+
+<br><br>
+    <% if @developer %>
+      <p>Displaying first <%= [100, @filtered_records.count].min %> FILTERED records out of <%= @filtered_records.count %> found.</p>
+      <table class="table table-striped">
+        <thead>
           <tr>
-            <td><%= record.location.latitude %></td>
-            <td><%= record.location.longitude %></td>
-            <td><%= record.outside_temp %>°C</td>
-            <td><%= record.recorded_at %></td>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Temperature</th>
+            <th>Recorded At</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @records.first(100).each do |record| %>
+            <tr>
+              <td><%= record.location.latitude %></td>
+              <td><%= record.location.longitude %></td>
+              <td><%= record.outside_temp %>°C</td>
+              <td><%= record.recorded_at %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
   <% else %>
     <p>No records found. Please adjust your search criteria and try again.</p>
   <% end %>
 
-  <% if @filtered_records.present? %>
-    <p>Displaying first <%= [100, @filtered_records.count].min %> FILTERED records out of <%= @filtered_records.count %> found.</p>
-    <p>Datetime is <%= @datetime %> </p>
-    <p>Time is <%= @datetime.in_time_zone("Eastern Time (US & Canada)").strftime("%m/%d/%Y %I:%M %p")  %></p>
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Latitude</th>
-          <th>Longitude</th>
-          <th>Temperature</th>
-          <th>Recorded At</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @records.first(100).each do |record| %>
+  <% if @developer %>
+    <% if @filtered_records.present? %>
+      <p>Displaying first <%= [100, @filtered_records.count].min %> FILTERED records out of <%= @filtered_records.count %> found.</p>
+      <table class="table table-striped">
+        <thead>
           <tr>
-            <td><%= record.location.latitude %></td>
-            <td><%= record.location.longitude %></td>
-            <td><%= record.outside_temp %>°C</td>
-            <%# convert to est and 12 hour format%>
-            <td><%= record.recorded_at.in_time_zone("Eastern Time (US & Canada)").strftime("%m/%d/%Y %I:%M %p") %></td>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Temperature</th>
+            <th>Recorded At</th>
           </tr>
+        </thead>
+        <tbody>
+          <% @records.first(100).each do |record| %>
+            <tr>
+              <td><%= record.location.latitude %></td>
+              <td><%= record.location.longitude %></td>
+              <td><%= record.outside_temp %>°C</td>
+              <%# convert to est and 12 hour format%>
+              <td><%= record.recorded_at.in_time_zone("Eastern Time (US & Canada)").strftime("%m/%d/%Y %I:%M %p") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p>No records found after filtering.</p>
+        <% if @records.empty? %>
+          <p>Adjust your search criteria and try again.</p>
+        <% else %>
+          <p>Error with filtering</p>
         <% end %>
-      </tbody>
-    </table>
-  <% else %>
-    <p>No records found. Please adjust your search criteria and try again.</p>
+    <% end %>
   <% end %>
 
 
   <div class="row">
     <div class="col">
-      <h2>Records Map</h2>
+      <h2>Nearby Datapoints</h2>
       <div id="records-map" style="height: 500px;"></div>
     </div>
     <div class="col">
-      <h2>Filtered Records Map</h2>
+      <h2>Relevant Datapoints</h2>
       <div id="filtered-records-map" style="height: 500px;"></div>
     </div>
   </div>

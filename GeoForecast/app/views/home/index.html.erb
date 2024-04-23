@@ -27,12 +27,18 @@
       <%= form.time_field :time, value: Time.now.strftime("%H:%M"), class: "form-control"%>
     </div>
 
-    <div class="col-md-3">
+    <div class="col-md-auto">
       <label class="form-label">Sort Method:</label><br>
       <%= form.check_box :sort_heap, id: 'sort_heap' %>
       <%= form.label :sort_heap, 'Heap Sort', class: "form-check-label" %><br>
       <%= form.check_box :sort_merge, id: 'sort_merge' %>
       <%= form.label :sort_merge, 'Merge Sort', class: "form-check-label" %>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Extras:</label><br>
+      <%= form.check_box :developer%>
+      <%= form.label :developer?, 'Developer?', class: "form-check-label" %><br>
     </div>
 
 

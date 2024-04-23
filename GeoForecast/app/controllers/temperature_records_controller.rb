@@ -8,6 +8,7 @@ class TemperatureRecordsController < ApplicationController
     datetime = parse_datetime_from_params
     sort_merge = params[:sort_merge] == "1"
     sort_heap = params[:sort_heap] == "1"
+    @developer = params[:developer] == "1"
 
 
     # Define these as per your requirements or make them configurable
@@ -26,7 +27,20 @@ class TemperatureRecordsController < ApplicationController
     
     puts "Attempting to process records..."
     @filtered_records = TemperatureRecord.find_and_process_records(latitude, longitude, initial_radius, increment_step, max_radius, sort_merge, sort_heap, datetime)
+
+    @average_temperature = average_temperature(@filtered_records)
+    @average_temperature_f = (@average_temperature * 9 / 5 + 32).round(1)
+    @confidence = calculate_confidence
   end
+
+  def average_temperature(records)
+    sum = 0
+    for record in records do
+      sum += record.outside_temp
+    end
+    sum = sum / records.length
+  end
+
 
   def parse_datetime_from_params
     date_str = params[:date]
@@ -47,5 +61,44 @@ class TemperatureRecordsController < ApplicationController
     end
   
     datetime
+  end
+
+  def calculate_confidence
+    expected_total_records = 500 # Set this based on your data knowledge
+    max_date_diff = 30.days
+    max_time_diff = 3.hours
+
+    nearby_ratio = @records.count.to_f / expected_total_records
+    filtered_ratio = @filtered_records.count.to_f / @records.count
+    date_confidence = 1 - (average_date_diff(@filtered_records) / max_date_diff)
+    time_confidence = 1 - (average_time_diff(@filtered_records) / max_time_diff)
+
+    # Normalize the ratios to be between 0 and 1 for consistency
+    nearby_ratio = normalize_ratio(nearby_ratio)
+    filtered_ratio = normalize_ratio(filtered_ratio)
+
+    # Combine all factors into a single confidence score (as a percentage)
+    combined_factors = (nearby_ratio + filtered_ratio + date_confidence + time_confidence) / 4
+    (combined_factors * 100).round(2)
+  end
+
+  private
+
+  def normalize_ratio(ratio)
+    [ratio, 1.0].min
+  end
+
+  def average_date_diff(records)
+    total_days = records.reduce(0) do |sum, record|
+      sum + (record.recorded_at.to_date - @datetime.to_date).abs
+    end
+    total_days / records.count
+  end
+
+  def average_time_diff(records)
+    total_seconds = records.reduce(0) do |sum, record|
+      sum + (record.recorded_at.seconds_since_midnight - @datetime.seconds_since_midnight).abs
+    end
+    total_seconds / records.count
   end
 end
