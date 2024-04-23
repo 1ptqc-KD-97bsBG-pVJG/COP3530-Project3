@@ -1,6 +1,7 @@
 <div class="container mt-5">
   <h1 class="text-center mb-4">GeoForecast</h1>
 
+  <%# Primary form %>
   <%= form_with(url: search_path, method: :get, local: true, class: "row g-3") do |form| %>
     <div class="col-md-3">
       <%= form.label :latitude, 'Latitude:', class: "form-label" %>
@@ -27,33 +28,66 @@
       <%= form.time_field :time, value: Time.now.strftime("%H:%M"), class: "form-control"%>
     </div>
 
+    <%# Sort method selection %>
+    <div class="col-md-auto">
+      <label class="form-label">Sort Method:</label><br>
+      <%= form.check_box :sort_heap, id: 'sort_heap' %>
+      <%= form.label :sort_heap, 'Heap Sort', class: "form-check-label" %><br>
+      <%= form.check_box :sort_merge, id: 'sort_merge' %>
+      <%= form.label :sort_merge, 'Merge Sort', class: "form-check-label" %>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Extras:</label><br>
+      <%= form.check_box :developer%>
+      <%= form.label :developer?, 'Developer?', class: "form-check-label" %><br>
+    </div>
+
+
     <div class="text-center">
       <%= form.submit 'Get Forecast', class: "btn btn-primary mt-3" %>
     </div>
   <% end %>
 
+  <%# Clickable map for location input %>
   <div class="text-center mt-5">
     <div id="map" style="height: 500px;"></div>
   </div>
 </div>
 
 <script>
-    // Javascript for map
+    // Javascript for clickable map input
     document.addEventListener('DOMContentLoaded', function() {
-      var map = L.map('map').setView([37.8, -96], 4);  // Center on the US at a zoom level showing most of the country
+      // Ensure at least one sort method is selected
+      const sortHeap = document.getElementById('sort_heap');
+      const sortMerge = document.getElementById('sort_merge');
+
+      function validateSortSelection() {
+        if (!sortHeap.checked && !sortMerge.checked) {
+          // Default to Heap sort if none is selected
+          sortHeap.checked = true;
+        }
+      }
+
+    document.querySelector('form').addEventListener('submit', validateSortSelection);
+
+      // Center on the US at a zoom level showing most of the country
+      var map = L.map('map').setView([37.8, -96], 4);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap'
       }).addTo(map);
 
-      var marker;  // Define a variable for the marker
+      var marker;
 
       function addOrUpdateMarker(lat, lng) {
         if (marker) {
-          marker.setLatLng([lat, lng]); // If marker exists, update its position
+          // If marker exists, update its position
+          marker.setLatLng([lat, lng]);
         } else {
-          marker = L.marker([lat, lng]).addTo(map); // Otherwise, create a new marker
+          // Otherwise, create a new marker
+          marker = L.marker([lat, lng]).addTo(map);
         }
       }
 
@@ -86,4 +120,3 @@
     });
   </script>
 </div>
-

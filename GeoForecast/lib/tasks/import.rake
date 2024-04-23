@@ -1,3 +1,5 @@
+# THIS IS A SCRIPT FOR IMPORTING THE CSV FILE INTO THE DATABASE
+# (necessary because latitude and longitude must be converted to a point object)
 # PLACE CSV TO BE IMPORTED RIGHT OUTSIDE OF THE 'GeoForecast' FOLDER
 # Run command: bundle exec rake db:import_temperature_records
 # to import the CSV file
