@@ -43,7 +43,7 @@ class TemperatureRecord < ApplicationRecord
       end
 
 
-    records
+    records.shuffle
    end
 #
 #   # NOTE: records may already be sorted by date, verify this and randomize prior to sorting if necessary
@@ -53,8 +53,9 @@ class TemperatureRecord < ApplicationRecord
     if sort_merge
       puts "Sorting records with merge sort..."
       # BENCHMARK HERE
+      sorted_records =  merge_sort(records)
       begin
-        sorted_records =  merge_sort(records)
+        puts "HOOHAA - sort"
       rescue => e
         puts "Error sorting records with merge sort: #{e.message}"
       end
@@ -63,8 +64,9 @@ class TemperatureRecord < ApplicationRecord
     if sort_heap
       puts "Sorting records with heap sort..."
       # BENCHMARK HERE
+      sorted_records =  heap_sort(records)
       begin
-        sorted_records =  heap_sort(records)
+        puts "HOOHAA - heap"
       rescue => e
         puts "Error sorting records with heap sort: #{e.message}"
       end
@@ -77,117 +79,122 @@ class TemperatureRecord < ApplicationRecord
 #   # TODO: implement sorting algorithm 1
 
     def self.merge_sort(records)
-        return records if records.length <= 1
+      return records if records.length <= 1
+      mid = records.length / 2
+      left_sorted = merge_sort(records[0...mid])
+      right_sorted = merge_sort(records[mid..])
 
-        mid = records.length / 2
-        left_sorted = merge_sort(records[0...mid])
-        right_sorted = merge_sort(records[mid..])
+      merge(left_sorted, right_sorted)
+    end
 
-        merge(left_sorted, right_sorted)
-      end
-
-      private
-
-      def self.merge(left, right)
-        sorted = []
-        while left.any? && right.any?
-          if left.first.recorded_at <= right.first.recorded_at
-            sorted << left.shift
-          else
-            sorted << right.shift
-          end
+    def self.merge(left, right)
+      sorted = []
+      until left.empty? || right.empty?
+        if left.first.recorded_at <= right.first.recorded_at
+          sorted << left.first
+          left = left.drop(1)
+        else
+          sorted << right.first
+          right = right.drop(1)
         end
-        sorted + left + right
       end
-
+      sorted + left + right
+    end
 
     def self.heap_sort(records, attr_sym = :recorded_at)
-        n = records.length
-        # Build max heap
-        (n / 2 - 1).downto(0) do |i|
-          heapify(records, n, i, attr_sym)
-        end
+      puts "RUNNING HEAP SORT"
+      records_arr = records.to_a
+      puts "Array is empty? #{records_arr.empty?}"
+      return records_arr if records_arr.empty?
 
-        # One by one extract elements
-        (n - 1).downto(1) do |i|
-          records[i], records[0] = records[0], records[i]  # swap
-          heapify(records, i, 0, attr_sym)  # call max heapify on the reduced heap
-        end
-        records
+      # Build max heap
+      n = records_arr.length - 1
+      i = n / 2
+      while i >= 0 do
+        heapify(records_arr, i, n, attr_sym)
+        i -= 1
       end
 
-      private
-
-      # Helper method to maintain the heap property
-      def self.heapify(records, n, i, attr_sym)
-        largest = i  # Initialize largest as root
-        left = 2 * i + 1  # left = 2*i + 1
-        right = 2 * i + 2  # right = 2*i + 2
-
-        # If left child is larger than root
-        largest = left if left < n && records[left].send(attr_sym) > records[largest].send(attr_sym)
-
-        # If right child is larger than largest so far
-        largest = right if right < n && records[right].send(attr_sym) > records[largest].send(attr_sym)
-
-        # If largest is not root
-        if largest != i
-          records[i], records[largest] = records[largest], records[i]  # swap
-          heapify(records, n, largest, attr_sym)  # Recursively heapify the affected sub-tree
-        end
+      # One by one extract elements
+      while n > 0 do
+        records_arr[0], records_arr[n] = records_arr[n], records_arr[0]  # swap
+        n -= 1
+        heapify(records_arr, 0, n, attr_sym)  # call max heapify on the reduced heap
       end
+      records_arr
+    end
+
+    private
+
+    # Helper method to maintain the heap property
+    def self.heapify(records, parent, limit, attr_sym)
+      root = records[parent]
+      while (child_node = 2 * parent + 1) <= limit do
+        # Select the larger child
+        if child_node < limit && records[child_node].send(attr_sym) < records[child_node + 1].send(attr_sym)
+          child_node += 1
+        end
+        # If root is already greater than the greatest child, break
+        break if root.send(attr_sym) >= records[child_node].send(attr_sym)
+
+        records[parent] = records[child_node]
+        parent = child_node
+      end
+      records[parent] = root
+    end
+
 
   # TODO: implement sorting algorithm performance tracking
 
   #TODO: filter sorted records:
   def self.filter_records(records, target_datetime)
-    puts "Filtering #{records.count} records..."
-    puts "Target datetime: " + target_datetime.to_s
+    # puts "Filtering #{records.count} records..."
+   #  puts "Target datetime: " + target_datetime.to_s
 
     # first find all records within one month
     filtered_records = filter_by_date(records, target_datetime, 15)
 
-    puts "Found #{filtered_records.count} records within 15 days of target date."
+    # puts "Found #{filtered_records.count} records within 15 days of target date."
   
     # find all records within 2 hours of time and 1 month of date
     filtered_records = filter_by_time(filtered_records, target_datetime, 2.hours)
 
     # if no records are within 1 month, ignore date and just filter by time
     if filtered_records.empty?
-      puts "NO RECORDS FOUND WITHIN 1 MONTH AND 2 HOURS OF TARGET DATETIME"
+      # puts "NO RECORDS FOUND WITHIN 1 MONTH AND 2 HOURS OF TARGET DATETIME"
       # if no records are within 2 hours, increment by 1 hours until increment is 6 hours
-      puts "Looking for records within 6 hours of target time..."
+      # puts "Looking for records within 6 hours of target time..."
       filtered_records = filter_by_time(records, target_datetime, 2.hours, true, 6.hours)
 
-      puts "Found #{filtered_records.count} records within 6 hours of target time."
+     #  puts "Found #{filtered_records.count} records within 6 hours of target time."
       
       # if no records found within 6 hours, filter by date and increment by 10 days until records found
       if filtered_records.empty?
-        puts "NO RECORDS FOUND WITHIN 6 HOURS OF TARGET TIME"
-        puts "Iterating through date range..."
+        # puts "NO RECORDS FOUND WITHIN 6 HOURS OF TARGET TIME"
+        # puts "Iterating through date range..."
         increment = 20
         while increment <= 183 && filtered_records.empty?
-          puts "Looking for records within #{increment} days of target date..."
+         # puts "Looking for records within #{increment} days of target date..."
           filtered_records = filter_by_date(records, target_datetime, increment)
           # increase search range by 10 days each loop
           increment += 5
         end
-        puts "Found #{filtered_records.count} records within #{increment} days of target date."
+        # puts "Found #{filtered_records.count} records within #{increment} days of target date."
 
         if filtered_records.empty?
           # if no records found, just return records (guarenteed to have some records)
-          puts "====================================="
-          puts "FILTER FAILED - RETURNING ALL RECORDS"
+          # puts "====================================="
+          # puts "FILTER FAILED - RETURNING ALL RECORDS"
           filtered_records = records
         else
         # If records are found with the broader date range, attempt a final time filter
-          puts "Looking for records within 2 hours of target time..."
+          # puts "Looking for records within 2 hours of target time..."
           filtered_records = filter_by_time(filtered_records, target_datetime, 2.hours, true, 24.hours)
-          puts "Found #{filtered_records.count} records within 2 hours of target time."
+          # puts "Found #{filtered_records.count} records within 2 hours of target time."
         end
       end
     end
-    puts "RETURNING #{filtered_records.count} FILTERED RECORDS"
+    # puts "RETURNING #{filtered_records.count} FILTERED RECORDS"
     filtered_records
   end
 
@@ -230,15 +237,15 @@ class TemperatureRecord < ApplicationRecord
       time_diff <= range
     end
   
-    puts "Initially found #{filtered_records.count} records within the time range of #{range} seconds."
+    # puts "Initially found #{filtered_records.count} records within the time range of #{range} seconds."
   
     # Loop for incrementing search range if no records are found and increment is true
     if filtered_records.empty? && increment
-      puts "TIME LOOP INITIATED"
+      # puts "TIME LOOP INITIATED"
       new_range = range
       while new_range < limit
         new_range += 1.hour
-        puts "Looking for records within #{new_range.seconds} of target time..."
+        # puts "Looking for records within #{new_range.seconds} of target time..."
   
         filtered_records = records.select do |record|
           record_time_of_day = record.recorded_at.seconds_since_midnight
@@ -247,13 +254,13 @@ class TemperatureRecord < ApplicationRecord
         end
   
         if filtered_records.any?
-          puts "Found #{filtered_records.count} records within #{new_range} seconds of target time."
+          # puts "Found #{filtered_records.count} records within #{new_range} seconds of target time."
           break
         end
       end
     end
   
-    puts "TIME FILTER - RETURNING #{filtered_records.count} FILTERED RECORDS"
+    # puts "TIME FILTER - RETURNING #{filtered_records.count} FILTERED RECORDS"
     filtered_records
   end
 
