@@ -4,7 +4,7 @@
 # Ignore all logfiles and tempfiles
 /log/*
 !/log/.keep
-/tmp
+/tmp/*
 
 # Ignore pid files, but keep the directory
 /tmp/pids/

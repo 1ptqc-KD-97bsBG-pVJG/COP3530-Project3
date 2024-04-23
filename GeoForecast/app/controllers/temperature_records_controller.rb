@@ -17,7 +17,7 @@ class TemperatureRecordsController < ApplicationController
     # Use the model's method to perform the search
     # ========
     # DEBUGGING
-    @records = TemperatureRecord.find_nearby_records(latitude, longitude, initial_radius)
+    @records = TemperatureRecord.find_nearby_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000)
     @datetime = datetime
 
     @latitude_global = latitude
@@ -25,7 +25,7 @@ class TemperatureRecordsController < ApplicationController
     # ========
     
     puts "Attempting to process records..."
-    @filtered_records = TemperatureRecord.find_and_process_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, datetime, sort_merge, sort_heap)
+    @filtered_records = TemperatureRecord.find_and_process_records(latitude, longitude, initial_radius, increment_step, max_radius, sort_merge, sort_heap, datetime)
   end
 
   def parse_datetime_from_params
