@@ -3,6 +3,8 @@ class TemperatureRecordsController < ApplicationController
     # Retrieve search parameters from the query string
     latitude = params[:latitude].to_f
     longitude = params[:longitude].to_f
+    @longitude_search = longitude
+    @latitude_search = latitude
     initial_radius = params[:initial_search_radius].to_i
     # combine date and time into one datetime object
     datetime = parse_datetime_from_params
@@ -64,25 +66,44 @@ class TemperatureRecordsController < ApplicationController
   end
 
   def calculate_confidence
-    expected_total_records = 500 # Set this based on your data knowledge
+    expected_total_records = 5000 # Set this based on your data knowledge
     max_date_diff = 30.days
-    max_time_diff = 3.hours
-
+    max_time_diff = 6.hours
+    good_distance = 200000 # meters
+    heavy_weight = 2 # adjust the weight for distance confidence
+  
     nearby_ratio = @records.count.to_f / expected_total_records
     filtered_ratio = @filtered_records.count.to_f / @records.count
     date_confidence = 1 - (average_date_diff(@filtered_records) / max_date_diff)
     time_confidence = 1 - (average_time_diff(@filtered_records) / max_time_diff)
-
+    
+    # Calculate distance confidence based on a random record
+    random_record = @filtered_records.sample
+    distance_confidence = 1 - (record_distance_from_point(random_record) / good_distance)
+  
     # Normalize the ratios to be between 0 and 1 for consistency
     nearby_ratio = normalize_ratio(nearby_ratio)
     filtered_ratio = normalize_ratio(filtered_ratio)
-
-    # Combine all factors into a single confidence score (as a percentage)
-    combined_factors = (nearby_ratio + filtered_ratio + date_confidence + time_confidence) / 4
-    (combined_factors * 100).round(2)
+    distance_confidence = normalize_ratio(distance_confidence)
+  
+    # Calculate combined factors for confidence score (as a percentage), weighting distance heavily
+    combined_factors = (nearby_ratio + filtered_ratio + date_confidence + time_confidence + distance_confidence * heavy_weight) / (4 + heavy_weight)
+    confidence_percentage = (combined_factors * 100).round(2)
+    
+    # Ensure the percentage is within bounds
+    [[confidence_percentage, 100].min, 0].max
   end
-
+  
   private
+  
+  def record_distance_from_point(record)
+    # Use the factory to create a point from the provided latitude and longitude
+    target_point = RGeo::Geographic.spherical_factory(srid: 4326).point(@longitude_search.to_f, @latitude_search.to_f)
+  
+    # If you're using ActiveRecord and PostGIS adapter
+    record.location.distance(target_point)
+  end
+    
 
   def normalize_ratio(ratio)
     [ratio, 1.0].min
