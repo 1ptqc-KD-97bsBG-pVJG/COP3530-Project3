@@ -51,6 +51,7 @@ class TemperatureRecord < ApplicationRecord
   def self.process_sorting(records, sort_merge, sort_heap)
     sorted_records = records
     if sort_merge
+      puts "Sorting records with merge sort..."
       # BENCHMARK HERE
       begin
         sorted_records =  merge_sort(records)
@@ -60,6 +61,7 @@ class TemperatureRecord < ApplicationRecord
     end
 
     if sort_heap
+      puts "Sorting records with heap sort..."
       # BENCHMARK HERE
       begin
         sorted_records =  heap_sort(records)
