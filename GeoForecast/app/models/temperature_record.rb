@@ -24,12 +24,10 @@ class TemperatureRecord < ApplicationRecord
 
     # If no records are found in the initial search, increment the radius until found or reaches max
     while records.none? && radius <= max_radius
-      puts "Radius: " + radius.to_s
       radius += increment_step
       radius_incremented = true
       records = where("ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?)", longitude, latitude, radius)
               .order(Arel.sql("ST_Distance(location, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326))"))
-      puts "Found: " + records.count.to_s + " records"
 
       end
 
@@ -38,7 +36,6 @@ class TemperatureRecord < ApplicationRecord
         radius += 2000
         records = where("ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?)", longitude, latitude, radius)
                 .order(Arel.sql("ST_Distance(location, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326))"))
-        puts "Found additional: " + records.count.to_s + " records"
       end
 
     records
@@ -112,7 +109,6 @@ class TemperatureRecord < ApplicationRecord
     end
 
     def self.heap_sort(records, attr_sym = :recorded_at)
-      puts "RUNNING HEAP SORT"
       records_arr = records.to_a
       return records_arr if records_arr.empty?
 
@@ -164,7 +160,6 @@ class TemperatureRecord < ApplicationRecord
     # if no records are within 1 month, ignore date and just filter by time
     if filtered_records.empty?
       # if no records are within 2 hours, increment by 1 hours until increment is 6 hours
-      # puts "Looking for records within 6 hours of target time..."
       filtered_records = filter_by_time(records, target_datetime, 2.hours, true, 6.hours)
       
       # if no records found within 6 hours, filter by date and increment by 10 days until records found
