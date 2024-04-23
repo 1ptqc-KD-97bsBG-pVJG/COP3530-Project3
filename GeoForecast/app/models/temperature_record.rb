@@ -1,3 +1,4 @@
+require 'benchmark'
 class TemperatureRecord < ApplicationRecord
   # TODO: switch to this implementation
   def self.find_and_process_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, sort_merge = false, sort_heap = true, datetime)
@@ -52,8 +53,10 @@ class TemperatureRecord < ApplicationRecord
     sorted_records = records
     if sort_merge
       puts "Sorting records with merge sort..."
-      # BENCHMARK HERE
-      sorted_records =  merge_sort(records)
+      time = Benchmark.realtime do
+        sorted_records =  merge_sort(records)
+      end
+      puts "Merge sort took #{time.round(8)*1000} milliseconds"
       begin
         puts "HOOHAA - sort"
       rescue => e
@@ -63,8 +66,10 @@ class TemperatureRecord < ApplicationRecord
 
     if sort_heap
       puts "Sorting records with heap sort..."
-      # BENCHMARK HERE
-      sorted_records =  heap_sort(records)
+      time = Benchmark.realtime do
+          sorted_records =  heap_sort(records)
+      end
+      puts "Heap sort took #{time.round(8)*1000} milliseconds"
       begin
         puts "HOOHAA - heap"
       rescue => e
