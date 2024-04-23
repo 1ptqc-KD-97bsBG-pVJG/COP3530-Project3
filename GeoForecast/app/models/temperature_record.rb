@@ -44,7 +44,7 @@ class TemperatureRecord < ApplicationRecord
       end
 
 
-    records.shuffle
+    records
    end
 #
 #   # NOTE: records may already be sorted by date, verify this and randomize prior to sorting if necessary
@@ -78,6 +78,22 @@ class TemperatureRecord < ApplicationRecord
     end
 
     sorted_records
+  end
+
+  def self.benchmark_heap(records) 
+
+    time_heap = Benchmark.realtime do
+      sorted_records =  heap_sort(records)
+    end
+
+    return time_heap
+  end
+
+  def self.benchmark_merge(records) 
+    time_merge = Benchmark.realtime do
+      sorted_records =  merge_sort(records)
+    end
+    return time_merge
   end
 
 

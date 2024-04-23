@@ -33,6 +33,9 @@ class TemperatureRecordsController < ApplicationController
     @average_temperature = average_temperature(@filtered_records)
     @average_temperature_f = (@average_temperature * 9 / 5 + 32).round(1)
     @confidence = calculate_confidence
+
+    # @time_merge = benchmark_merge(@records)
+    # @time_heap = benchmark_heap(@records)
   end
 
   def average_temperature(records)

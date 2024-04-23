@@ -31,6 +31,7 @@
       <p class="text-center" style="font-size: 1rem; margin-top: -25px;">
         <i><%= number_with_delimiter(@records.count, delimiter: ",") %> total nearby records, using <%= number_with_delimiter(@filtered_records.count, delimiter: ",") %> relevant records</i>
       </p>
+      <p><%= @time_merge %></p>
 
       </div>
     </div>  
