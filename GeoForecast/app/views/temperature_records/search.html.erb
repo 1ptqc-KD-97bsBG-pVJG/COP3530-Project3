@@ -7,39 +7,37 @@
     </div>
   </div>
 
+  <%# Check if records were returned before attempting to show data %>
   <% if @records.present? %>
-    
-    
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="text-center p-4" style="background: linear-gradient(to right, #6dd5ed, #2193b0); border-radius: 15px; color: white; margin-bottom: 0;">
-        <img src="https://cdn2.iconfinder.com/data/icons/weather-flat-14/64/weather02-512.png" alt="Weather Icon" style="width: 160px; height: auto;">
+    <div class="container mt-5">
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="text-center p-4" style="background: linear-gradient(to right, #6dd5ed, #2193b0); border-radius: 15px; color: white; margin-bottom: 0;">
+            <img src="https://cdn2.iconfinder.com/data/icons/weather-flat-14/64/weather02-512.png" alt="Weather Icon" style="width: 160px; height: auto;">
 
-        <h1 class="display-1"><strong><%= @average_temperature_f %>°F</strong></h1>
-        
-        <p class="lead">
-          <i>on <%= @datetime.strftime("%m/%d @ %I:%M %p") %></i>
-        </p>
-        <p class="lead">
-          <%= @confidence %>% confident
-        </p>
+            <h1 class="display-1"><strong><%= @average_temperature_f %>°F</strong></h1>
+            
+            <p class="lead">
+              <i>on <%= @datetime.strftime("%m/%d @ %I:%M %p") %></i>
+            </p>
+            <p class="lead">
+              <%= @confidence %>% confident
+            </p>
+          </div>
+        </div>
+        <div class="row justify-content-center mt-4">
+          <div class="col-md-8">
+            <p class="text-center" style="font-size: 1rem; margin-top: -25px;">
+              <i><%= number_with_delimiter(@records.count, delimiter: ",") %> total nearby records, using <%= number_with_delimiter(@filtered_records.count, delimiter: ",") %> relevant records</i>
+            </p>
+            <p><%= @time_merge %></p>
+          </div>
+        </div>  
       </div>
     </div>
-    <div class="row justify-content-center mt-4">
-      <div class="col-md-8">
-      <p class="text-center" style="font-size: 1rem; margin-top: -25px;">
-        <i><%= number_with_delimiter(@records.count, delimiter: ",") %> total nearby records, using <%= number_with_delimiter(@filtered_records.count, delimiter: ",") %> relevant records</i>
-      </p>
-      <p><%= @time_merge %></p>
 
-      </div>
-    </div>  
-  </div>
-</div>
-
-
-<br><br>
+    <br><br>
+    <%# Extra data for developers to debug %>
     <% if @developer %>
       <p>Displaying first <%= [100, @filtered_records.count].min %> FILTERED records out of <%= @filtered_records.count %> found.</p>
       <table class="table table-striped">
@@ -100,8 +98,6 @@
         <% end %>
     <% end %>
   <% end %>
-
-
   <div class="row">
     <div class="col">
       <h2>Nearby Datapoints</h2>
@@ -113,6 +109,7 @@
     </div>
   </div>
 
+  <%# Javascrips for map display of datapoints %>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       <% if @records.present? %>
@@ -161,16 +158,7 @@
     }
   </script>
 
-
-
-
-
   <div class="text-center mt-4">
     <%= link_to 'New Search', root_path, class: "btn btn-secondary" %>
   </div>
-
-
-
-
 </div>
-

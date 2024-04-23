@@ -1,6 +1,5 @@
 require 'benchmark'
 class TemperatureRecord < ApplicationRecord
-  # TODO: switch to this implementation
   def self.find_and_process_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000, sort_merge = false, sort_heap = true, datetime)
      records = find_nearby_records(latitude, longitude, initial_radius, increment_step, max_radius)
      sorted_records = process_sorting(records, sort_merge, sort_heap)
@@ -9,46 +8,42 @@ class TemperatureRecord < ApplicationRecord
     filtered_records
   end
 
-
-
   # Method to find records within a specified radius around a point
   # If no records are found in the initial search, it will expand the search radius incrementally
   # If records are found after expanding the radius, it will further expand the radius by 2000 meters to capture nearby records
   
-  # max_radius set to furthest point on continental US from data
+  # max_radius set to approximately furthest point on continental US from data
   def self.find_nearby_records(latitude, longitude, initial_radius, increment_step, max_radius)
-      location_point = RGeo::Geographic.spherical_factory(srid: 4326).point(longitude, latitude)
-      radius = initial_radius
-      records = where("ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?)", longitude, latitude, radius)
-                .order(Arel.sql("ST_Distance(location, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326))"))
-      # Flag to check if radius was ever incremented
-      radius_incremented = false
+    #PostGIS functions and queries 
+    location_point = RGeo::Geographic.spherical_factory(srid: 4326).point(longitude, latitude)
+    radius = initial_radius
+    records = where("ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?)", longitude, latitude, radius)
+              .order(Arel.sql("ST_Distance(location, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326))"))
+    # Flag to check if radius was ever incremented
+    radius_incremented = false
 
-      while records.none? && radius <= max_radius
-        puts "Radius: " + radius.to_s
-        radius += increment_step
-        radius_incremented = true
-        records = where("ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?)", longitude, latitude, radius)
-                .order(Arel.sql("ST_Distance(location, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326))"))
-        puts "Found: " + records.count.to_s + " records"
+    # If no records are found in the initial search, increment the radius until found or reaches max
+    while records.none? && radius <= max_radius
+      puts "Radius: " + radius.to_s
+      radius += increment_step
+      radius_incremented = true
+      records = where("ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?)", longitude, latitude, radius)
+              .order(Arel.sql("ST_Distance(location, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326))"))
+      puts "Found: " + records.count.to_s + " records"
 
       end
 
-      # If records are found after incrementing, and radius can be further expanded by 2000 meters, do so
+      # If records are found after incrementing, and radius can be further expanded by 2000 meters, do so to neighboring records
       if records.any? && radius_incremented && (radius + 2000) <= max_radius
         radius += 2000
         records = where("ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?)", longitude, latitude, radius)
                 .order(Arel.sql("ST_Distance(location, ST_SetSRID(ST_MakePoint(#{longitude}, #{latitude}), 4326))"))
         puts "Found additional: " + records.count.to_s + " records"
-
       end
-
 
     records
    end
-#
-#   # NOTE: records may already be sorted by date, verify this and randomize prior to sorting if necessary
-#
+
   def self.process_sorting(records, sort_merge, sort_heap)
     sorted_records = records
     if sort_merge
@@ -58,7 +53,6 @@ class TemperatureRecord < ApplicationRecord
       end
       puts "Merge sort took #{time.round(8)*1000} milliseconds"
       begin
-        puts "HOOHAA - sort"
       rescue => e
         puts "Error sorting records with merge sort: #{e.message}"
       end
@@ -71,7 +65,6 @@ class TemperatureRecord < ApplicationRecord
       end
       puts "Heap sort took #{time.round(8)*1000} milliseconds"
       begin
-        puts "HOOHAA - heap"
       rescue => e
         puts "Error sorting records with heap sort: #{e.message}"
       end
@@ -81,7 +74,6 @@ class TemperatureRecord < ApplicationRecord
   end
 
   def self.benchmark_heap(records) 
-
     time_heap = Benchmark.realtime do
       sorted_records =  heap_sort(records)
     end
@@ -95,9 +87,6 @@ class TemperatureRecord < ApplicationRecord
     end
     return time_merge
   end
-
-
-#   # TODO: implement sorting algorithm 1
 
     def self.merge_sort(records)
       return records if records.length <= 1
@@ -125,7 +114,6 @@ class TemperatureRecord < ApplicationRecord
     def self.heap_sort(records, attr_sym = :recorded_at)
       puts "RUNNING HEAP SORT"
       records_arr = records.to_a
-      puts "Array is empty? #{records_arr.empty?}"
       return records_arr if records_arr.empty?
 
       # Build max heap
@@ -138,9 +126,9 @@ class TemperatureRecord < ApplicationRecord
 
       # One by one extract elements
       while n > 0 do
-        records_arr[0], records_arr[n] = records_arr[n], records_arr[0]  # swap
+        records_arr[0], records_arr[n] = records_arr[n], records_arr[0] 
         n -= 1
-        heapify(records_arr, 0, n, attr_sym)  # call max heapify on the reduced heap
+        heapify(records_arr, 0, n, attr_sym) 
       end
       records_arr
     end
@@ -165,57 +153,39 @@ class TemperatureRecord < ApplicationRecord
     end
 
 
-  # TODO: implement sorting algorithm performance tracking
-
-  #TODO: filter sorted records:
+  # Filtering funtion, provided sorted records, filters using custom algorithm to determine the most relevant records
   def self.filter_records(records, target_datetime)
-    # puts "Filtering #{records.count} records..."
-   #  puts "Target datetime: " + target_datetime.to_s
-
-    # first find all records within one month
+    # first find all records within ~one month (ignoring the year)
     filtered_records = filter_by_date(records, target_datetime, 15)
-
-    # puts "Found #{filtered_records.count} records within 15 days of target date."
   
     # find all records within 2 hours of time and 1 month of date
     filtered_records = filter_by_time(filtered_records, target_datetime, 2.hours)
 
     # if no records are within 1 month, ignore date and just filter by time
     if filtered_records.empty?
-      # puts "NO RECORDS FOUND WITHIN 1 MONTH AND 2 HOURS OF TARGET DATETIME"
       # if no records are within 2 hours, increment by 1 hours until increment is 6 hours
       # puts "Looking for records within 6 hours of target time..."
       filtered_records = filter_by_time(records, target_datetime, 2.hours, true, 6.hours)
-
-     #  puts "Found #{filtered_records.count} records within 6 hours of target time."
       
       # if no records found within 6 hours, filter by date and increment by 10 days until records found
       if filtered_records.empty?
-        # puts "NO RECORDS FOUND WITHIN 6 HOURS OF TARGET TIME"
-        # puts "Iterating through date range..."
         increment = 20
         while increment <= 183 && filtered_records.empty?
-         # puts "Looking for records within #{increment} days of target date..."
           filtered_records = filter_by_date(records, target_datetime, increment)
-          # increase search range by 10 days each loop
+          # increase search range by 10 days (5 on either side) each loop
           increment += 5
         end
-        # puts "Found #{filtered_records.count} records within #{increment} days of target date."
 
         if filtered_records.empty?
-          # if no records found, just return records (guarenteed to have some records)
-          # puts "====================================="
-          # puts "FILTER FAILED - RETURNING ALL RECORDS"
+          # if no records found, just return all records (guarenteed to have some records)
+          # should never happen but good fallback
           filtered_records = records
         else
         # If records are found with the broader date range, attempt a final time filter
-          # puts "Looking for records within 2 hours of target time..."
           filtered_records = filter_by_time(filtered_records, target_datetime, 2.hours, true, 24.hours)
-          # puts "Found #{filtered_records.count} records within 2 hours of target time."
         end
       end
     end
-    # puts "RETURNING #{filtered_records.count} FILTERED RECORDS"
     filtered_records
   end
 
@@ -244,12 +214,10 @@ class TemperatureRecord < ApplicationRecord
     days_before_month[month - 1] + day + (leap_year && month > 2 ? 1 : 0)
   end
 
-
-      
   def self.filter_by_time(records, target_datetime, range, increment = false, limit = 6.hours)
     # Extract only the time part of the target_datetime
+    # All other ways of doing this weren't working
     target_time_of_day = target_datetime.seconds_since_midnight
-    puts "Target time for comparison (seconds since midnight): #{target_time_of_day}"
   
     # Initial filter based on the time range
     filtered_records = records.select do |record|
@@ -257,17 +225,12 @@ class TemperatureRecord < ApplicationRecord
       time_diff = (record_time_of_day - target_time_of_day).abs
       time_diff <= range
     end
-  
-    # puts "Initially found #{filtered_records.count} records within the time range of #{range} seconds."
-  
+    
     # Loop for incrementing search range if no records are found and increment is true
     if filtered_records.empty? && increment
-      # puts "TIME LOOP INITIATED"
       new_range = range
       while new_range < limit
-        new_range += 1.hour
-        # puts "Looking for records within #{new_range.seconds} of target time..."
-  
+        new_range += 1.hour  
         filtered_records = records.select do |record|
           record_time_of_day = record.recorded_at.seconds_since_midnight
           time_diff = (record_time_of_day - target_time_of_day).abs
@@ -281,9 +244,6 @@ class TemperatureRecord < ApplicationRecord
       end
     end
   
-    # puts "TIME FILTER - RETURNING #{filtered_records.count} FILTERED RECORDS"
     filtered_records
   end
-
-
 end

@@ -12,14 +12,8 @@ class TemperatureRecordsController < ApplicationController
     sort_heap = params[:sort_heap] == "1"
     @developer = params[:developer] == "1"
 
-
-    # Define these as per your requirements or make them configurable
-    # increment_step = 1000 # Example: Increment by 1000 meters
-    # max_radius = 20000 # Example: Maximum search radius
-
-    # Use the model's method to perform the search
-    # ========
     # DEBUGGING
+    # ========
     @records = TemperatureRecord.find_nearby_records(latitude, longitude, initial_radius = 2000, increment_step = 1000, max_radius = 2000000)
     @datetime = datetime
 
@@ -27,17 +21,14 @@ class TemperatureRecordsController < ApplicationController
     @longitude_global = longitude
     # ========
     
-    puts "Attempting to process records..."
     @filtered_records = TemperatureRecord.find_and_process_records(latitude, longitude, initial_radius, increment_step, max_radius, sort_merge, sort_heap, datetime)
 
     @average_temperature = average_temperature(@filtered_records)
     @average_temperature_f = (@average_temperature * 9 / 5 + 32).round(1)
     @confidence = calculate_confidence
-
-    # @time_merge = benchmark_merge(@records)
-    # @time_heap = benchmark_heap(@records)
   end
 
+  # Calculate average temperature
   def average_temperature(records)
     sum = 0
     for record in records do
@@ -68,12 +59,14 @@ class TemperatureRecordsController < ApplicationController
     datetime
   end
 
+  # Calculate confidence score
   def calculate_confidence
-    expected_total_records = 5000 # Set this based on your data knowledge
+    # Adjust variables to adjust internal confidence weightings
+    expected_total_records = 5000
     max_date_diff = 30.days
     max_time_diff = 6.hours
-    good_distance = 200000 # meters
-    heavy_weight = 2 # adjust the weight for distance confidence
+    good_distance = 200000
+    heavy_weight = 2
   
     nearby_ratio = @records.count.to_f / expected_total_records
     filtered_ratio = @filtered_records.count.to_f / @records.count
@@ -97,16 +90,15 @@ class TemperatureRecordsController < ApplicationController
     [[confidence_percentage, 100].min, 0].max
   end
   
+  # Helpers for calculating confidence
   private
   
   def record_distance_from_point(record)
-    # Use the factory to create a point from the provided latitude and longitude
+    # Create a point from the provided latitude and longitude
     target_point = RGeo::Geographic.spherical_factory(srid: 4326).point(@longitude_search.to_f, @latitude_search.to_f)
   
-    # If you're using ActiveRecord and PostGIS adapter
     record.location.distance(target_point)
   end
-    
 
   def normalize_ratio(ratio)
     [ratio, 1.0].min
